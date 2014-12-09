@@ -19,6 +19,7 @@ class Project():
             self.update()
 
         self.TASK_ID += 1
+        return task
 
     def del_task(self, task):
         #TODO: Test del_task()
@@ -29,6 +30,7 @@ class Project():
         for t in self.tasks:
             t.connected = t.connected - {task}
         self.tasks.remove(task)
+        self.update()
 
     def set_prev_task(self, task, prev_task):
         task.add_prev_task(prev_task)

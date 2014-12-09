@@ -155,40 +155,96 @@ def select_task(project):
     while True:
         cls()
         print("TASK SELECTION MENU")
+        task = task_selection(project)
+        if task == "x":
+            return
+        else:
+            task_menu(project, task)
+    return
+
+def task_selection(project):
+    while True:
+        cls()
         print("    {:<20}".format("TASK NAME"))
         for task in project.tasks:
             print("{: <2}: {}".format(task.task_id, task.name[:20]))
         selection = input("Selection (x to return to the previous menu):")
         if str(selection) == "x":
-            return
+            return "x"
         try:
             task = project.tasks[int(selection)]
-            task_menu(project, task)
+            return task
         except:
             input("Invalid entry. Please try again. (Press <Enter> to continue)")
-    return
 
 #TODO: task_menu()
 def task_menu(project, task):
-    input("NOT IMPLEMENTED. Press <Enter> to continue.")
-    #TODO: View task information
-    #TODO: Edit task information
-    #TODO: Add previous task
+    while True:
+        cls()
+        #TODO: View task information
+        #####
+        # View Task Info
+        #####
+        print("{:<3} {:<}".format("ID", "NAME"))
+        print("{:<3} {:<}".format(task.task_id, task.name))
+        print("DURATION: {}".format(task.duration))
+        print("ES: {:>5}   EF: {:>5}".format(task.early_start, task.early_finish))
+        print("LS: {:>5}   LF: {:>5}".format(task.late_start, task.late_finish))
+        print("PREVIOUS TASK(S):")
+        if not task.prev_tasks:
+            print("NONE")
+        else:
+            print("    {:<3} {:<}".format("ID", "NAME"))
+            for t in task.prev_tasks:
+                print("    {:<3} {:<}".format(t.task_id, t.name))
+        print("NEXT TASK(S):")
+        if not task.next_tasks:
+            print("NONE")
+        else:
+            print("    {:<3} {:<}".format("ID", "NAME"))
+            for t in task.next_tasks:
+                print("    {:<3} {:<}".format(t.task_id, t.name))
+        print("Menu:")
+        print("1: Change task name")
+        print("2: Change duration")
+        print("3: Add previous task")
+        selection = input("Selection (x to return to the previous menu):")
+        if selection == "x":
+            return
+        else:
+            pass
+        #TODO: Edit task information
+        #TODO: Add previous task
+        #TODO: Remove a previous task (IS THIS IMPLEMENTED IN project.py?)
 
-#TODO: delete_task_menu
+
 def delete_task_menu(project):
-    input("NOT IMPLEMENTED. Press <Enter> to continue.")
-    #TODO: Delete tasks
+    while True:
+        cls()
+        print("DELETE A TASK")
+        task = task_selection(project)
+        if task == "x":
+            return
+        else:
+            verify = input("Are you sure you want to delete {}? (y/n):".format(task.name))
+            if str(verify) == "y":
+                project.del_task(task)
+                return
 
 def cls():
     print("\n" * 20)
 
 def Testing():
     p = Project("TEST PROJECT")
-    p.new_task("Task 1", 1)
-    p.new_task("Task 2", 2)
-    p.new_task("Task 012345567890123456789", 120)
-    p.set_prev_task(p.tasks[-1], p.tasks[0])
+    t0 = p.new_task("Task 0", 1)
+    t1 = p.new_task("Task 1", 2)
+    t2 = p.new_task("Task 2", 3)
+    t3 = p.new_task("Task 3", 4)
+    p.set_prev_task(t1, t0)
+    p.set_prev_task(t3, t1)
+    p.set_prev_task(t2, t0)
+    p.set_prev_task(t3, t2)
+    p.set_prev_task(t0, t3)
     PROJECTS.append(p)
 
 if __name__ == "__main__":
