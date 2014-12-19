@@ -94,7 +94,9 @@ def project_menu(project):
             print("{:<13}: {}".format("NAME", project.name))
             print("{:<13}: {}".format("DURATION", project.duration))
             print("{:<13}: {}".format("NUM OF TASKS", len(project.tasks)))
-            print("{:<13}: {}".format("CRITICAL PATH", "->".join([str(task.task_id) for task in project.critical_path])))
+            print("{:<13}: ".format("CRITICAL PATH(S)"))#, "->".join([str(task.task_id) for task in path for path in project.critical_path])), end=" ")
+            for path in project.critical_path:
+                print("->".join([str(task.task_id) for task in path]))
             print_tasks(project)
             input("Press <Enter> to continue.")
 
@@ -244,7 +246,6 @@ def Testing():
     p.set_prev_task(t3, t1)
     p.set_prev_task(t2, t0)
     p.set_prev_task(t3, t2)
-    p.set_prev_task(t0, t3)
     PROJECTS.append(p)
 
 if __name__ == "__main__":

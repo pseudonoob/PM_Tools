@@ -22,7 +22,6 @@ class Project():
         return task
 
     def del_task(self, task):
-        #TODO: Test del_task()
         for t in task.next_tasks:
             t.prev_tasks.remove(task)
         for t in task.prev_tasks:
@@ -74,23 +73,21 @@ class Project():
 
     def find_critical_path(self):
         self.critical_path = []
-        starts = [t for t in self.tasks if not t.prev_tasks]
-        for task in starts:
-            path = self.rec_path(task)
-            if path:
-                self.critical_path = path
+        todo = [[t] for t in self.tasks if not t.prev_tasks and t.slack == 0]
+        while todo:
+            current_path = todo.pop(0)
+            task = current_path[-1]
+            if not task.next_tasks and sum([t.duration for t in current_path]) == self.duration:
+                self.critical_path.append(current_path)
+            elif not task.next_tasks:
+                continue
+            else:
+                todo += [current_path + [next_task] for next_task in task.next_tasks if next_task.slack == 0]
+        #Removes duplicate paths by changing path lists to tuples, putting them into a set, and then converting it all
+        #   back to lists
+        self.critical_path = [list(p) for p in (set(tuple(path) for path in self.critical_path))]
 
-    def rec_path(self, task):
-        if not task.next_tasks and task.slack == 0 and task.late_finish == self.duration:
-            return [task]
-        elif task.slack > 0:
-            return
-        else:
-            for t in task.next_tasks:
-                path = self.rec_path(t)
-                if path:
-                    return [task] + path
-        return
+
 
 
 class Task():
@@ -106,42 +103,49 @@ class Task():
         self.late_finish = duration
         self.task_id = None
         self.slack = 0
-        self.connected = {self}
 
     def add_prev_task(self, task):
         if type(task) == Task:
-            if task in (self.connected & task.connected - {task}):
-                print("These tasks are already connected.")
-                return
+            #CHECK IF TASKS ARE ALREADY CONNECTED
+            if task in self.prev_tasks:
+                return True
+
+            #PREVENT LOOPS IN NETWORK
+            prev = self.prev_tasks[:] + [task]
+
+            while prev:
+                t = prev.pop()
+                if t == self:
+                    return False
+                else:
+                    prev += t.prev_tasks
+
             self.prev_tasks.append(task)
             task.next_tasks.append(self)
-            self.connected = self.connected & task.connected
-            return
+            return True
         else:
             print("You can only add other tasks. You tried to add a {}".format(str(type(task))))
-            return
+            return False
 
     def add_next_task(self, task):
-
-        if type(task) == Task:
-            if task in (self.connected & task.connected - {task}):
-                print("These tasks are already connected.")
-                return
-            self.next_tasks.append(task)
-            task.prev_tasks.append(self)
-            self.connected = self.connected & task.connected
-            return
-        else:
-            print("You can only add other tasks. You tried to add a {}".format(str(type(task))))
-            return
+        return task.add_prev_task(task, self)
 
     def __str__(self):
-        return "Name: {0}\nDuration: {1}".format(self.name, self.duration)
+        return "{}: {}".format(self.task_id, self.name)
 
 def Testing():
 
-    p = create_test_project(10, 20, 2)
+    p = create_test_project(15, 20, 3)
     print_project(p)
+
+    p2 = Project("CP Testing")
+    t1 = p2.new_task("Start", 1)
+    t2 = p2.new_task("End 1", 1)
+    t3 = p2.new_task("End 2", 1)
+    p2.set_prev_task(t2, t1)
+    p2.set_prev_task(t3, t1)
+    p2.set_prev_task(t1, t1)
+    print_project(p2)
 
 def create_test_project(num_tasks, max_len, max_prev):
     import random
@@ -169,7 +173,11 @@ def print_project(project):
                                                                        t.late_start,    t.late_finish,  t.slack))
     print("Total project duration: {}".format(project.duration))
 
-    print("Critical path: {}".format([task.task_id for task in project.critical_path]))
+    #print("Critical path: {}".format([task.task_id for task in project.critical_path]))
+    cp = project.critical_path[:]
+    print("There are {} critical paths.".format(len(cp)))
+    for path in cp:
+        print([task.task_id for task in path])
 
 if __name__ == "__main__":
     Testing()
