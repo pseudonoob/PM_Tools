@@ -1,38 +1,31 @@
 from project import *
-EXIT = "x"
 PROJECTS = []
 
 def main():
+    #PROJECTS = []
     while True:
-        flag = main_menu()
-        if flag == "EXIT":
-            break
-    print("Goodbye")
-    exit()
+        cls()
+        print("MAIN MENU")
+        print("1: Create new project")
+        if PROJECTS:
+            print("2: Select project")
+            print("3: Delete project")
 
-def main_menu():
-    cls()
-    print("MAIN MENU")
-    print("1: Create new project")
-    if PROJECTS:
-        print("2: Select project")
-        print("3: Delete project")
+        print("x: Exit")
+        selection = input("Selection:")
+        if str(selection) == 'x':
+            return
+        elif str(selection) == "1":
+            name = input("Enter project name:")
+            p = Project(name)
+            PROJECTS.append(p)
+        elif str(selection) == "2" and PROJECTS:
+            project_selection_menu()
+        elif str(selection) == "3" and PROJECTS:
+            project_deletion_menu()
+        else:
+            print("Invalid input.  Please try again.")
 
-    print("x: Exit")
-    selection = input("Selection:")
-    if str(selection) == 'x':
-        return "EXIT"
-    elif str(selection) == "1":
-        name = input("Enter project name:")
-        p = Project(name)
-        PROJECTS.append(p)
-    elif str(selection) == "2" and PROJECTS:
-        project_selection_menu()
-    elif str(selection) == "3" and PROJECTS:
-        project_deletion_menu()
-    else:
-        print("Invalid input.  Please try again.")
-    return
 
 def project_selection_menu():
     while True:
@@ -50,6 +43,7 @@ def project_selection_menu():
             project_menu(project)
         else:
             input("Invalid input. Press <Enter> to try again.")
+
 
 def project_deletion_menu():
     while True:
@@ -69,6 +63,7 @@ def project_deletion_menu():
                 return
             except:
                 print("Invalid input, try again.")
+
 
 def project_menu(project):
     while True:
@@ -94,10 +89,10 @@ def project_menu(project):
             print("{:<13}: {}".format("NAME", project.name))
             print("{:<13}: {}".format("DURATION", project.duration))
             print("{:<13}: {}".format("NUM OF TASKS", len(project.tasks)))
-            print("{:<13}: ".format("CRITICAL PATH(S)"))#, "->".join([str(task.task_id) for task in path for path in project.critical_path])), end=" ")
+            print("{:<13}: ".format("CRITICAL PATH(S)"))
             for path in project.critical_path:
                 print("->".join([str(task.task_id) for task in path]))
-            print_tasks(project)
+            print_tasks(project.tasks)
             input("Press <Enter> to continue.")
 
         #####
@@ -125,7 +120,7 @@ def project_menu(project):
         #####
         elif str(selection) == "5" and project.tasks:
             cls()
-            print_tasks(project)
+            print_tasks(project.tasks)
             input("Press <Enter> to continue.")
 
         #####
@@ -134,11 +129,13 @@ def project_menu(project):
         elif str(selection) == "6" and project.tasks:
             select_task(project)
 
-def print_tasks(project):
+
+def print_tasks(tasks):
     print("{:^28}".format("TASKS"))
     print("{:<3} {:<15} {:>8}".format("ID", "NAME", "DURATION"))
-    for task in project.tasks:
+    for task in tasks:
         print("{:<3} {:<15} {:>8}".format(task.task_id, task.name[0:15], task.duration))
+
 
 def create_task(project):
     cls()
@@ -153,6 +150,7 @@ def create_task(project):
             continue
     return
 
+
 def select_task(project):
     while True:
         cls()
@@ -163,6 +161,7 @@ def select_task(project):
         else:
             task_menu(project, task)
     return
+
 
 def task_selection(project):
     while True:
@@ -179,11 +178,10 @@ def task_selection(project):
         except:
             input("Invalid entry. Please try again. (Press <Enter> to continue)")
 
-#TODO: task_menu()
+
 def task_menu(project, task):
     while True:
         cls()
-        #TODO: View task information
         #####
         # View Task Info
         #####
@@ -210,14 +208,43 @@ def task_menu(project, task):
         print("1: Change task name")
         print("2: Change duration")
         print("3: Add previous task")
+        print("4: Disconnect a task")
         selection = input("Selection (x to return to the previous menu):")
         if selection == "x":
             return
-        else:
-            pass
-        #TODO: Edit task information
-        #TODO: Add previous task
-        #TODO: Remove a previous task (IS THIS IMPLEMENTED IN project.py?)
+        #####
+        # NEW TASK NAME
+        #####
+        elif str(selection) == "1":
+            new_name = input("Enter a new task name:")
+            if new_name:
+                task.name = new_name
+        #####
+        # NEW TASK DURATION
+        #####
+        elif str(selection) == "2":
+            new_duration = input("Enter a new task duration:")
+            if new_duration.isnumeric():
+                task.duration = int(new_duration)
+                project.update()
+        #####
+        # NEW PREVIOUS TASK
+        #####
+        elif str(selection) == "3":
+            cls()
+            print_tasks(project.tasks)
+            prev_task_id = input("Select the ID of the task you would like to connect to {}?:".format(task.name))
+            project.set_prev_task(task, project.get_task(prev_task_id))
+            project.update()
+        #####
+        # DISCONNECT TASKS
+        #####
+        elif str(selection) == "4":
+            cls()
+            print_tasks(task.prev_tasks + task.next_tasks)
+            disconnect = input("Which tasks would you like to disconnect?:")
+            if disconnect.isnumeric():
+                project.disconnect_tasks(task, project.get_task(int(disconnect)))
 
 
 def delete_task_menu(project):
@@ -233,21 +260,25 @@ def delete_task_menu(project):
                 project.del_task(task)
                 return
 
+
 def cls():
     print("\n" * 20)
 
-def Testing():
+
+def testing():
     p = Project("TEST PROJECT")
     t0 = p.new_task("Task 0", 1)
     t1 = p.new_task("Task 1", 2)
     t2 = p.new_task("Task 2", 3)
     t3 = p.new_task("Task 3", 4)
+    t4 = p.new_task("Task 4", 5)
     p.set_prev_task(t1, t0)
     p.set_prev_task(t3, t1)
     p.set_prev_task(t2, t0)
     p.set_prev_task(t3, t2)
     PROJECTS.append(p)
 
+
 if __name__ == "__main__":
-    Testing()
+    testing()
     main()

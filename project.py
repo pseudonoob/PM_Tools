@@ -26,8 +26,6 @@ class Project():
             t.prev_tasks.remove(task)
         for t in task.prev_tasks:
             t.next_tasks.remove(task)
-        for t in self.tasks:
-            t.connected = t.connected - {task}
         self.tasks.remove(task)
         self.update()
 
@@ -87,8 +85,21 @@ class Project():
         #   back to lists
         self.critical_path = [list(p) for p in (set(tuple(path) for path in self.critical_path))]
 
+    def get_task(self, id):
+        for task in self.tasks:
+            if task.task_id == int(id):
+                return task
+        return None
 
-
+    def disconnect_tasks(self, task1, task2):
+        if task2 in task1.prev_tasks:
+            task1.prev_tasks.remove(task2)
+            task2.next_tasks.remove(task1)
+            self.update()
+        elif task2 in task1.next_tasks:
+            task1.next_tasks.remove(task2)
+            task2.prev_tasks.remove(task1)
+            self.update()
 
 class Task():
 
